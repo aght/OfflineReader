@@ -4,11 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
-    <com.aght.offlinereader.AdBlockWebView
-        android:id="@+id/ad_block_webView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    tools:context=".WebViewActivity">
 
 </android.support.constraint.ConstraintLayout>
