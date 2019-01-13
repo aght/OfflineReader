@@ -9,5 +9,12 @@ public class WebViewActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_web_view);
+
+        getSupportActionBar().hide();
+
+        AdBlockWebView webView = (AdBlockWebView) findViewById(R.id.ad_block_webView);
+
+        webView.loadUrl("https://xantandminions.wordpress.com/kuma-kuma-kuma-bear/the-bears-bear-a-bare-kuma-chapter-216/");
+//        webView.saveWebArchive("");
     }
 }
