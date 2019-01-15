@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     case R.id.navigation_archive:
                         return true;
+                    case R.id.navigation_account:
+                        return true;
                 }
 
                 return false;

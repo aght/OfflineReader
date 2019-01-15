@@ -19,4 +19,9 @@
         android:id="@+id/navigation_archive"
         android:icon="@drawable/ic_round_archive_24px"
         android:title="Archive" />
+
+    <item
+        android:id="@+id/navigation_account"
+        android:icon="@drawable/ic_round_account_circle_24px"
+        android:title="Account" />
 </menu>
