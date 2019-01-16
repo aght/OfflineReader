@@ -4,28 +4,24 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.webkit.WebView;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 public class AdBlockWebView extends WebView {
 
     private AdBlockWebViewClient adBlockWebViewClient;
     private String currentUrl;
-    private byte[] filterData;
 
     public AdBlockWebView(Context context) {
         super(context);
-        initAdBlock();
+        init();
     }
 
     public AdBlockWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initAdBlock();
+        init();
     }
 
     public AdBlockWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initAdBlock();
+        init();
     }
 
     @Override
@@ -38,14 +34,8 @@ public class AdBlockWebView extends WebView {
         return currentUrl;
     }
 
-    public byte[] getFilterData() {
-        return filterData;
-    }
-
-    private void initAdBlock() {
+    private void init() {
         adBlockWebViewClient = new AdBlockWebViewClient();
         setWebViewClient(adBlockWebViewClient);
-
-//        filterData = readFilterBytes();
     }
 }

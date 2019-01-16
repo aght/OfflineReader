@@ -3,7 +3,10 @@
     <color name="colorPrimary">#ffffff</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#ffffff</color>
+
     <color name="bottomNavTopBorder">#e2e2e2</color>
     <color name="bottomNavActive">#595959</color>
     <color name="bottomNavInactive">#bcbcbc</color>
+
+    <color name="recycler_view_item_separator">#c4c4c4</color>
 </resources>

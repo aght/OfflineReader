@@ -18,22 +18,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity";
 
-    // Load linked library
-    static {
-        System.loadLibrary("ad-block-lib");
-    }
-
-    private native boolean initAdBlocker(@NonNull byte[] filterBytes);
-
-    private native boolean shouldBlockUrl(@NonNull String domain, @NonNull String url);
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // TEST ONLY
-        testAdBlocker();
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_view_navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(getNavigationListener());
@@ -70,19 +58,5 @@ public class MainActivity extends AppCompatActivity {
         transaction.replace(R.id.fragment_container, fragment);
         transaction.addToBackStack(null);
         transaction.commit();
-    }
-
-    private void testAdBlocker() {
-        try {
-
-            if (initAdBlocker(IOUtils.toByteArray(getAssets().open("filter.dat")))) {
-                String domain = "https://stackoverflow.com/questions/10972577/c-cmake-add-non-built-files";
-                String url = "https://secure.quantserve.com/quant.js";
-                Log.e(TAG, String.valueOf(shouldBlockUrl(domain, url)));
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

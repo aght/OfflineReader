@@ -6,19 +6,27 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <FrameLayout
-        android:id="@+id/fragment_container"
+    <android.support.design.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottom_view_navigation_holder">
 
-    </FrameLayout>
+        <FrameLayout
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        </FrameLayout>
+
+    </android.support.design.widget.CoordinatorLayout>
 
     <LinearLayout
+        android:id="@+id/bottom_view_navigation_holder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:layout_alignParentBottom="true"
         android:layout_gravity="bottom"
-        android:layout_alignParentBottom="true">
+        android:orientation="vertical">
 
         <View
             android:layout_width="match_parent"
@@ -31,9 +39,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@android:color/white"
-            app:labelVisibilityMode="unlabeled"
-            app:itemIconTint="@drawable/bottom_nav_icon_color"
             app:itemIconSize="27dp"
+            app:itemIconTint="@drawable/bottom_nav_icon_color"
+            app:labelVisibilityMode="unlabeled"
             app:menu="@menu/bottom_view_navigation" />
     </LinearLayout>
 

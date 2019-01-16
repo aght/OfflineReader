@@ -1,21 +1,23 @@
 package com.aght.offlinereader;
 
-import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class HomeFragment extends Fragment {
 
-    private RecyclerView savedItemsView;
+    private RecyclerView savedPagesView;
 
-    public HomeFragment() {
-        // Required empty public constructor
-    }
+    public HomeFragment() {}
 
     public static HomeFragment newInstance() {
         return new HomeFragment();
@@ -29,10 +31,29 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        savedItemsView = getActivity().findViewById(R.id.saved_items_view);
+        View rootView = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_home, container, false);
+        savedPagesView = rootView.findViewById(R.id.saved_pages_view);
+
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(rootView.getContext());
+        savedPagesView.setLayoutManager(layoutManager);
+        savedPagesView.setItemAnimator(new DefaultItemAnimator());
+
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(savedPagesView.getContext(),
+                ((LinearLayoutManager) layoutManager).getOrientation());
+        savedPagesView.addItemDecoration(dividerItemDecoration);
+
+        List<SavedPage> savedPages = new ArrayList<>();
+
+        for (int i = 0; i < 15; i++) {
+            savedPages.add(new SavedPage("Title: " + String.valueOf(i), "URL"));
+        }
+
+        SavedPageAdapter adapter = new SavedPageAdapter(savedPages);
+
+        savedPagesView.setAdapter(adapter);
+
+        return rootView;
     }
 
 }

@@ -8,29 +8,23 @@
 
 #include "ad_block_client.h"
 
-#define TAG JNI_LOG
-
-#define LOG_E(...) __android_log_print(ANDROID_LOG_ERROR,    TAG, __VA_ARGS__)
-#define LOG_W(...) __android_log_print(ANDROID_LOG_WARN,     TAG, __VA_ARGS__)
-#define LOG_I(...) __android_log_print(ANDROID_LOG_INFO,     TAG, __VA_ARGS__)
-#define LOG_D(...) __android_log_print(ANDROID_LOG_DEBUG,    TAG, __VA_ARGS__)
-
-
 // Memory leak?
 static AdBlockClient client;
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_aght_offlinereader_MainActivity_initAdBlocker(
+Java_com_aght_offlinereader_AdBlockWebViewClient_initAdBlocker(
         JNIEnv* env,
-        jobject,
+        jclass,
         jbyteArray filterBytes) {
-    jboolean isCopyByteArray;
+    jboolean isCopyFilterBytes;
 
-    jbyte* tmp = env->GetByteArrayElements(filterBytes, &isCopyByteArray);
+    client = AdBlockClient{};
+
+    jbyte* tmp = env->GetByteArrayElements(filterBytes, &isCopyFilterBytes);
 
     bool result = client.deserialize(reinterpret_cast<char*>(tmp));
 
-    if (isCopyByteArray == JNI_TRUE) {
+    if (isCopyFilterBytes == JNI_TRUE) {
         env->ReleaseByteArrayElements(filterBytes, tmp, 0);
     }
 
@@ -38,26 +32,26 @@ Java_com_aght_offlinereader_MainActivity_initAdBlocker(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_aght_offlinereader_MainActivity_shouldBlockUrl(
+Java_com_aght_offlinereader_AdBlockWebViewClient_shouldBlockUrl(
         JNIEnv* env,
         jobject,
-        jstring domain_str,
-        jstring url_str) {
+        jstring currentPageDomain,
+        jstring urlToCheck) {
 
-    jboolean isCopyDomain;
-    jboolean isCopyUrl;
+    jboolean isCopyCurrentPageDomain;
+    jboolean isCopyUrlToCheck;
 
-    const char* domain = env->GetStringUTFChars(domain_str, &isCopyDomain);
-    const char* url = env->GetStringUTFChars(url_str, &isCopyUrl);
+    const char* domain = env->GetStringUTFChars(currentPageDomain, &isCopyCurrentPageDomain);
+    const char* url = env->GetStringUTFChars(urlToCheck, &isCopyUrlToCheck);
 
     bool shouldBlock = client.matches(url, FONoFilterOption, domain);
 
-    if (isCopyDomain == JNI_TRUE) {
-        env->ReleaseStringUTFChars(domain_str, domain);
+    if (isCopyCurrentPageDomain == JNI_TRUE) {
+        env->ReleaseStringUTFChars(currentPageDomain, domain);
     }
 
-    if (isCopyUrl == JNI_TRUE) {
-        env->ReleaseStringUTFChars(url_str, url);
+    if (isCopyUrlToCheck == JNI_TRUE) {
+        env->ReleaseStringUTFChars(urlToCheck, url);
     }
 
     return shouldBlock;
