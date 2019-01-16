@@ -46,23 +46,6 @@ public class AdBlockWebView extends WebView {
         adBlockWebViewClient = new AdBlockWebViewClient();
         setWebViewClient(adBlockWebViewClient);
 
-        filterData = readFilterBytes();
-    }
-
-    private byte[] readFilterBytes() {
-        try {
-            InputStream inputStream = getContext().getAssets().open("filter.dat");
-
-            byte[] bytes = new byte[inputStream.available()];
-
-            inputStream.read(bytes);
-            inputStream.close();
-
-            return bytes;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+//        filterData = readFilterBytes();
     }
 }

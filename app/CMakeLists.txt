@@ -17,7 +17,16 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-             src/main/cpp/ad-block-lib.cpp )
+             src/main/cpp/ad-block-lib.cpp
+             src/main/cpp/ad_block_client.cc
+             src/main/cpp/BloomFilter.cpp
+             src/main/cpp/cosmetic_filter.cc
+             src/main/cpp/filter.cc
+             src/main/cpp/filter_list.cc
+             src/main/cpp/hash_set.cc
+             src/main/cpp/hashFn.cpp
+             src/main/cpp/no_fingerprint_domain.cc
+             src/main/cpp/protocol.cc)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
