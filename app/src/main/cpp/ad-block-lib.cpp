@@ -11,15 +11,15 @@
 static AdBlockClient client;
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_aght_offlinereader_AdBlockWebViewClient_initAdBlocker(
+Java_com_aght_offlinereader_adblock_webview_AdBlockWebViewClient_initAdBlockClient(
         JNIEnv* env,
-        jobject,
+        jclass,
         jbyteArray filterBytes) {
     jboolean isCopyByteArray;
 
     jbyte* tmp = env->GetByteArrayElements(filterBytes, &isCopyByteArray);
 
-    char* buffer = (char*) tmp;
+    char* buffer = reinterpret_cast<char*>(tmp);
 
     bool result = client.deserialize(buffer);
 
@@ -31,7 +31,7 @@ Java_com_aght_offlinereader_AdBlockWebViewClient_initAdBlocker(
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_aght_offlinereader_AdBlockWebViewClient_shouldBlockUrl(
+Java_com_aght_offlinereader_adblock_webview_AdBlockWebViewClient_shouldBlockUrl(
         JNIEnv* env,
         jobject,
         jstring domain_str,

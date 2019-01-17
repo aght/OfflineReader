@@ -1,31 +1,30 @@
-package com.aght.offlinereader;
+package com.aght.offlinereader.adblock.webview;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.aght.offlinereader.OfflineReader;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+
 public class AdBlockWebViewClient extends WebViewClient {
 
     static {
         System.loadLibrary("ad-block-lib");
+        initAdBlockClient();
     }
 
     private static final String TAG = "AdBlockWebViewClient";
 
-    private byte[] filterData;
-
-    public AdBlockWebViewClient(byte[] filterData) {
-        if (filterData == null) {
-            filterData = new byte[]{0};
-        }
-
-        this.filterData = filterData;
-
-        initAdBlocker(this.filterData);
-    }
+    // Native code requires this object to persist
+    private static byte[] filterData;
 
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
@@ -45,13 +44,20 @@ public class AdBlockWebViewClient extends WebViewClient {
         return new WebResourceResponse("text/plain", "UTF-8", null);
     }
 
-    private void testAdBlocker() {
-        String domain = "https://stackoverflow.com/questions/10972577/c-cmake-add-non-built-files";
-        String url = "https://secure.quantserve.com/quant.js";
-        Log.e(TAG, String.valueOf(shouldBlockUrl(domain, url)));
+    private static void initAdBlockClient() {
+        try {
+            filterData = IOUtils.toByteArray(OfflineReader
+                    .getContext()
+                    .getAssets()
+                    .open("filter.dat"));
+
+            initAdBlockClient(filterData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private native boolean initAdBlocker(@NonNull byte[] filterBytes);
+    private static native boolean initAdBlockClient(@NonNull byte[] filterBytes);
 
     private native boolean shouldBlockUrl(@NonNull String currentPageDomain, @NonNull String urlToCheck);
 }

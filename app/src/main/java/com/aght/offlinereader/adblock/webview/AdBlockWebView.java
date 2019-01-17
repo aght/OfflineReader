@@ -1,35 +1,27 @@
-package com.aght.offlinereader;
+package com.aght.offlinereader.adblock.webview;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.util.AttributeSet;
 import android.webkit.WebView;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
 
 public class AdBlockWebView extends WebView {
 
     private AdBlockWebViewClient adBlockWebViewClient;
+    private AdBlockWebChromeClient adBlockWebChromeClient;
     private String currentUrl;
-    private Context context;
 
     public AdBlockWebView(Context context) {
         super(context);
-        this.context = context;
         init();
     }
 
     public AdBlockWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        this.context = context;
         init();
     }
 
     public AdBlockWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        this.context = context;
         init();
     }
 
@@ -44,18 +36,12 @@ public class AdBlockWebView extends WebView {
     }
 
     private void init() {
-        adBlockWebViewClient = new AdBlockWebViewClient(getFilterData());
+        adBlockWebViewClient = new AdBlockWebViewClient();
+        adBlockWebChromeClient = new AdBlockWebChromeClient();
+
         setWebViewClient(adBlockWebViewClient);
+        setWebChromeClient(adBlockWebChromeClient);
+
         getSettings().setJavaScriptEnabled(true);
-    }
-
-    private byte[] getFilterData() {
-        try {
-            return IOUtils.toByteArray(context.getAssets().open("filter.dat"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 }

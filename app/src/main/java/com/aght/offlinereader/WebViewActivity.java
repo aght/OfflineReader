@@ -3,6 +3,8 @@ package com.aght.offlinereader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.aght.offlinereader.adblock.webview.AdBlockWebView;
+
 public class WebViewActivity extends AppCompatActivity {
 
     @Override
