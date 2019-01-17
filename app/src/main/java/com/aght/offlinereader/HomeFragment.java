@@ -1,5 +1,6 @@
 package com.aght.offlinereader;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -38,22 +39,29 @@ public class HomeFragment extends Fragment {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(rootView.getContext());
         savedPagesView.setLayoutManager(layoutManager);
         savedPagesView.setItemAnimator(new DefaultItemAnimator());
+        savedPagesView.setAdapter(new SavedPageAdapter(generateTestData()));
+        savedPagesView.addOnItemTouchListener(new RecyclerViewTouchListener(getActivity(), savedPagesView, new RecyclerViewTouchListener.ClickListener() {
+            @Override
+            public void onClick(View view, int position) {
+                startActivity(new Intent(getActivity(), WebViewActivity.class));
+            }
 
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(savedPagesView.getContext(),
-                ((LinearLayoutManager) layoutManager).getOrientation());
-        savedPagesView.addItemDecoration(dividerItemDecoration);
+            @Override
+            public void onLongClick(View view, int position) {
 
+            }
+        }));
+
+        return rootView;
+    }
+
+    private List<SavedPage> generateTestData() {
         List<SavedPage> savedPages = new ArrayList<>();
 
         for (int i = 0; i < 15; i++) {
             savedPages.add(new SavedPage("Title: " + String.valueOf(i), "URL"));
         }
 
-        SavedPageAdapter adapter = new SavedPageAdapter(savedPages);
-
-        savedPagesView.setAdapter(adapter);
-
-        return rootView;
+        return savedPages;
     }
-
 }

@@ -12,9 +12,9 @@ public class WebViewActivity extends AppCompatActivity {
 
         getSupportActionBar().hide();
 
-        AdBlockWebView webView = (AdBlockWebView) findViewById(R.id.ad_block_webView);
+        AdBlockWebView webView = findViewById(R.id.ad_block_webView);
 
-        webView.loadUrl("https://xantandminions.wordpress.com/kuma-kuma-kuma-bear/the-bears-bear-a-bare-kuma-chapter-216/");
+        webView.loadUrl("https://ads-blocker.com/testing/");
 //        webView.saveWebArchive("");
     }
 }

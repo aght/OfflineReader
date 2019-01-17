@@ -26,7 +26,7 @@ std::set<std::string> unknownOptions;
 // Fast hash function applicable to 2 byte char checks
 class HashFn2Byte : public HashFn
 {
-  public:
+public:
     HashFn2Byte() : HashFn(0, false)
     {
     }
@@ -268,7 +268,7 @@ enum FilterParseState
     FPOneAt,
     FPData,
     // Same as data but won't consider any special char handling like | or $
-    FPDataOnly
+            FPDataOnly
 };
 
 // Not currently multithreaded safe due to the static buffer named 'data'
@@ -307,182 +307,182 @@ void parseFilter(const char *input, const char *end, Filter *f,
 
             switch (*p)
             {
-            case '|':
-                if (parseState == FPStart || parseState == FPPastWhitespace)
-                {
-                    parseState = FPOneBar;
-                    filterRuleEndPos++;
-                    p++;
-                    continue;
-                }
-                else if (parseState == FPOneBar)
-                {
-                    parseState = FPOneBar;
-                    f->filterType =
-                        static_cast<FilterType>(f->filterType | FTHostAnchored);
-                    parseState = FPData;
-                    filterRuleEndPos++;
-                    p++;
-
-                    int len = findFirstSeparatorChar(p, end);
-                    f->host = new char[len + 1];
-                    f->host[len] = '\0';
-                    memcpy(f->host, p, len);
-
-                    if ((*(p + len) == '^' && (*(p + len + 1) == '\0' || *(p + len + 1) == '$' || isEndOfLine(*(p + len + 1)))) ||
-                        *(p + len) == '\0' || *(p + len) == '$' ||
-                        isEndOfLine(*(p + len)))
+                case '|':
+                    if (parseState == FPStart || parseState == FPPastWhitespace)
                     {
-                        f->filterType =
-                            static_cast<FilterType>(f->filterType | FTHostOnly);
+                        parseState = FPOneBar;
+                        filterRuleEndPos++;
+                        p++;
+                        continue;
                     }
-
-                    continue;
-                }
-                else
-                {
-                    f->filterType =
-                        static_cast<FilterType>(f->filterType | FTRightAnchored);
-                    parseState = FPData;
-                    filterRuleEndPos++;
-                    p++;
-                    continue;
-                }
-                break;
-            case '@':
-                if (parseState == FPStart || parseState == FPPastWhitespace)
-                {
-                    parseState = FPOneAt;
-                    filterRuleEndPos++;
-                    p++;
-                    continue;
-                }
-                else if (parseState == FPOneAt)
-                {
-                    parseState = FPOneBar;
-                    f->filterType = FTException;
-                    parseState = FPPastWhitespace;
-                    filterRuleEndPos++;
-                    p++;
-                    continue;
-                }
-                break;
-            case '!':
-            case '[':
-                if (parseState == FPStart || parseState == FPPastWhitespace)
-                {
-                    f->filterType = FTComment;
-                    // We don't care about comments right now
-                    return;
-                }
-                break;
-            case '\r':
-            case '\n':
-            case '\t':
-            case ' ':
-                // Skip leading whitespace
-                if (parseState == FPStart)
-                {
-                    filterRuleStart++;
-                    filterRuleEndPos++;
-                    p++;
-                    continue;
-                }
-                break;
-            case '/':
-            {
-                const size_t inputLen = strlen(input);
-                if (parseState == FPStart || parseState == FPPastWhitespace)
-                {
-                    if (input[inputLen - 1] == '/' && inputLen > 1)
+                    else if (parseState == FPOneBar)
                     {
-                        // Just copy out the whole regex and return early
-                        int len = static_cast<int>(inputLen) - i - 1;
-                        f->data = new char[len];
-                        f->data[len - 1] = '\0';
-                        memcpy(f->data, input + i + 1, len - 1);
+                        parseState = FPOneBar;
+                        f->filterType =
+                                static_cast<FilterType>(f->filterType | FTHostAnchored);
+                        parseState = FPData;
+                        filterRuleEndPos++;
+                        p++;
 
-                        if (preserveRules)
+                        int len = findFirstSeparatorChar(p, end);
+                        f->host = new char[len + 1];
+                        f->host[len] = '\0';
+                        memcpy(f->host, p, len);
+
+                        if ((*(p + len) == '^' && (*(p + len + 1) == '\0' || *(p + len + 1) == '$' || isEndOfLine(*(p + len + 1)))) ||
+                            *(p + len) == '\0' || *(p + len) == '$' ||
+                            isEndOfLine(*(p + len)))
                         {
-                            f->ruleDefinition = new char[len];
-                            f->ruleDefinition[len - 1] = '\0';
-                            memcpy(f->ruleDefinition, input + i + 1, len - 1);
+                            f->filterType =
+                                    static_cast<FilterType>(f->filterType | FTHostOnly);
                         }
 
-                        f->filterType = FTRegex;
-                        return;
+                        continue;
                     }
                     else
                     {
+                        f->filterType =
+                                static_cast<FilterType>(f->filterType | FTRightAnchored);
                         parseState = FPData;
+                        filterRuleEndPos++;
+                        p++;
+                        continue;
                     }
-                }
-                break;
-            }
-            case '$':
-                // Handle adguard HTML filtering rules syntax
-                // e.g. example.org$$script[data-src="banner"]
-                // see https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#html-filtering-rules-syntax-1
-                if (*(p + 1) == '$')
-                {
-                    if (i != 0)
+                    break;
+                case '@':
+                    if (parseState == FPStart || parseState == FPPastWhitespace)
                     {
-                        f->domainList = new char[i + 1];
-                        memcpy(f->domainList, data, i + 1);
-                        i = 0;
+                        parseState = FPOneAt;
+                        filterRuleEndPos++;
+                        p++;
+                        continue;
                     }
-                    parseState = FPDataOnly;
-                    f->filterType = FTHTMLFiltering;
-                    p += 2;
-                    filterRuleEndPos += 2;
-                    continue;
-                }
-                while (*filterRuleEndPos != '\0' && !isEndOfLine(*filterRuleEndPos))
-                {
-                    filterRuleEndPos++;
-                }
-                f->parseOptions(p + 1);
-                earlyBreak = true;
-                continue;
-            case '#':
-                // ublock uses some comments of the form #[space]
-                if (parseState == FPStart || parseState == FPPastWhitespace)
-                {
-                    if (*(p + 1) == ' ')
+                    else if (parseState == FPOneAt)
+                    {
+                        parseState = FPOneBar;
+                        f->filterType = FTException;
+                        parseState = FPPastWhitespace;
+                        filterRuleEndPos++;
+                        p++;
+                        continue;
+                    }
+                    break;
+                case '!':
+                case '[':
+                    if (parseState == FPStart || parseState == FPPastWhitespace)
                     {
                         f->filterType = FTComment;
                         // We don't care about comments right now
                         return;
                     }
-                }
-
-                if (*(p + 1) == '#' || *(p + 1) == '@')
+                    break;
+                case '\r':
+                case '\n':
+                case '\t':
+                case ' ':
+                    // Skip leading whitespace
+                    if (parseState == FPStart)
+                    {
+                        filterRuleStart++;
+                        filterRuleEndPos++;
+                        p++;
+                        continue;
+                    }
+                    break;
+                case '/':
                 {
-                    if (i != 0)
+                    const size_t inputLen = strlen(input);
+                    if (parseState == FPStart || parseState == FPPastWhitespace)
                     {
-                        f->domainList = new char[i + 1];
-                        memcpy(f->domainList, data, i + 1);
-                        i = 0;
+                        if (input[inputLen - 1] == '/' && inputLen > 1)
+                        {
+                            // Just copy out the whole regex and return early
+                            int len = static_cast<int>(inputLen) - i - 1;
+                            f->data = new char[len];
+                            f->data[len - 1] = '\0';
+                            memcpy(f->data, input + i + 1, len - 1);
+
+                            if (preserveRules)
+                            {
+                                f->ruleDefinition = new char[len];
+                                f->ruleDefinition[len - 1] = '\0';
+                                memcpy(f->ruleDefinition, input + i + 1, len - 1);
+                            }
+
+                            f->filterType = FTRegex;
+                            return;
+                        }
+                        else
+                        {
+                            parseState = FPData;
+                        }
                     }
-                    parseState = FPDataOnly;
-                    if (*(p + 1) == '#')
-                    {
-                        f->filterType = FTElementHiding;
-                    }
-                    else
-                    {
-                        f->filterType = FTElementHidingException;
-                    }
-                    p += 2;
-                    continue;
+                    break;
                 }
-                // Copied from default label to avoid warning (unannotated
-                // fall-through between switch labels)
-                parseState = FPData;
-                break;
-            default:
-                parseState = FPData;
-                break;
+                case '$':
+                    // Handle adguard HTML filtering rules syntax
+                    // e.g. example.org$$script[data-src="banner"]
+                    // see https://kb.adguard.com/en/general/how-to-create-your-own-ad-filters#html-filtering-rules-syntax-1
+                    if (*(p + 1) == '$')
+                    {
+                        if (i != 0)
+                        {
+                            f->domainList = new char[i + 1];
+                            memcpy(f->domainList, data, i + 1);
+                            i = 0;
+                        }
+                        parseState = FPDataOnly;
+                        f->filterType = FTHTMLFiltering;
+                        p += 2;
+                        filterRuleEndPos += 2;
+                        continue;
+                    }
+                    while (*filterRuleEndPos != '\0' && !isEndOfLine(*filterRuleEndPos))
+                    {
+                        filterRuleEndPos++;
+                    }
+                    f->parseOptions(p + 1);
+                    earlyBreak = true;
+                    continue;
+                case '#':
+                    // ublock uses some comments of the form #[space]
+                    if (parseState == FPStart || parseState == FPPastWhitespace)
+                    {
+                        if (*(p + 1) == ' ')
+                        {
+                            f->filterType = FTComment;
+                            // We don't care about comments right now
+                            return;
+                        }
+                    }
+
+                    if (*(p + 1) == '#' || *(p + 1) == '@')
+                    {
+                        if (i != 0)
+                        {
+                            f->domainList = new char[i + 1];
+                            memcpy(f->domainList, data, i + 1);
+                            i = 0;
+                        }
+                        parseState = FPDataOnly;
+                        if (*(p + 1) == '#')
+                        {
+                            f->filterType = FTElementHiding;
+                        }
+                        else
+                        {
+                            f->filterType = FTElementHidingException;
+                        }
+                        p += 2;
+                        continue;
+                    }
+                    // Copied from default label to avoid warning (unannotated
+                    // fall-through between switch labels)
+                    parseState = FPData;
+                    break;
+                default:
+                    parseState = FPData;
+                    break;
             }
         }
         data[i] = *p;
@@ -696,12 +696,6 @@ void AdBlockClient::clear()
         badFingerprintsHashSet = nullptr;
     }
 
-    // NOTE: Added to make the object cleanup the passed buffer itself
-    if (deserializedBuffer) {
-        delete deserializedBuffer;
-        deserializedBuffer = nullptr;
-    }
-
     numFilters = 0;
     numCosmeticFilters = 0;
     numHtmlFilters = 0;
@@ -895,12 +889,12 @@ bool AdBlockClient::matches(const char *input, FilterOption contextOption,
                              inputHost, static_cast<int>(inputHostLen)))
         {
             contextOption =
-                static_cast<FilterOption>(contextOption | FOThirdParty);
+                    static_cast<FilterOption>(contextOption | FOThirdParty);
         }
         else
         {
             contextOption =
-                static_cast<FilterOption>(contextOption | FONotThirdParty);
+                    static_cast<FilterOption>(contextOption | FONotThirdParty);
         }
     }
 
@@ -1028,8 +1022,8 @@ bool AdBlockClient::matches(const char *input, FilterOption contextOption,
     bool bloomExceptionFilterMiss = exceptionBloomFilter && !exceptionBloomFilter->substringExists(input,
                                                                                                    AdBlockClient::kFingerprintSize);
     bool hostAnchoredExceptionHashSetMiss =
-        isHostAnchoredHashSetMiss(input, inputLen, hostAnchoredExceptionHashSet,
-                                  inputHost, inputHostLen, contextOption, contextDomain);
+            isHostAnchoredHashSetMiss(input, inputLen, hostAnchoredExceptionHashSet,
+                                      inputHost, inputHostLen, contextOption, contextDomain);
 
     // Now that we have a matching rule, we should check if no exception rule
     // hits, if none hits, we should block
@@ -1243,17 +1237,17 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
     if (!noFingerprintAntiDomainHashSet)
     {
         noFingerprintAntiDomainHashSet =
-            new HashSet<NoFingerprintDomain>(100, false);
+                new HashSet<NoFingerprintDomain>(100, false);
     }
     if (!noFingerprintDomainExceptionHashSet)
     {
         noFingerprintDomainExceptionHashSet =
-            new HashSet<NoFingerprintDomain>(1000, false);
+                new HashSet<NoFingerprintDomain>(1000, false);
     }
     if (!noFingerprintAntiDomainExceptionHashSet)
     {
         noFingerprintAntiDomainExceptionHashSet =
-            new HashSet<NoFingerprintDomain>(100, false);
+                new HashSet<NoFingerprintDomain>(100, false);
     }
 
     const char *p = input;
@@ -1289,63 +1283,63 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
             {
                 switch (f.filterType & FTListTypesMask)
                 {
-                case FTException:
-                    if (f.filterType & FTHostOnly)
-                    {
-                        newNumHostAnchoredExceptionFilters++;
-                    }
-                    else if (AdBlockClient::getFingerprint(nullptr, f))
-                    {
-                        newNumExceptionFilters++;
-                    }
-                    else if (f.isDomainOnlyFilter())
-                    {
-                        newNumNoFingerprintDomainOnlyExceptionFilters++;
-                    }
-                    else if (f.isAntiDomainOnlyFilter())
-                    {
-                        newNumNoFingerprintAntiDomainOnlyExceptionFilters++;
-                    }
-                    else
-                    {
-                        newNumNoFingerprintExceptionFilters++;
-                    }
-                    break;
-                case FTElementHiding:
-                    newNumCosmeticFilters++;
-                    break;
-                case FTElementHidingException:
-                    newNumCosmeticFilters++;
-                    break;
-                case FTHTMLFiltering:
-                    newNumHtmlFilters++;
-                    break;
-                case FTEmpty:
-                case FTComment:
-                    // No need to store comments
-                    break;
-                default:
-                    if (f.filterType & FTHostOnly)
-                    {
-                        newNumHostAnchoredFilters++;
-                    }
-                    else if (AdBlockClient::getFingerprint(nullptr, f))
-                    {
-                        newNumFilters++;
-                    }
-                    else if (f.isDomainOnlyFilter())
-                    {
-                        newNumNoFingerprintDomainOnlyFilters++;
-                    }
-                    else if (f.isAntiDomainOnlyFilter())
-                    {
-                        newNumNoFingerprintAntiDomainOnlyFilters++;
-                    }
-                    else
-                    {
-                        newNumNoFingerprintFilters++;
-                    }
-                    break;
+                    case FTException:
+                        if (f.filterType & FTHostOnly)
+                        {
+                            newNumHostAnchoredExceptionFilters++;
+                        }
+                        else if (AdBlockClient::getFingerprint(nullptr, f))
+                        {
+                            newNumExceptionFilters++;
+                        }
+                        else if (f.isDomainOnlyFilter())
+                        {
+                            newNumNoFingerprintDomainOnlyExceptionFilters++;
+                        }
+                        else if (f.isAntiDomainOnlyFilter())
+                        {
+                            newNumNoFingerprintAntiDomainOnlyExceptionFilters++;
+                        }
+                        else
+                        {
+                            newNumNoFingerprintExceptionFilters++;
+                        }
+                        break;
+                    case FTElementHiding:
+                        newNumCosmeticFilters++;
+                        break;
+                    case FTElementHidingException:
+                        newNumCosmeticFilters++;
+                        break;
+                    case FTHTMLFiltering:
+                        newNumHtmlFilters++;
+                        break;
+                    case FTEmpty:
+                    case FTComment:
+                        // No need to store comments
+                        break;
+                    default:
+                        if (f.filterType & FTHostOnly)
+                        {
+                            newNumHostAnchoredFilters++;
+                        }
+                        else if (AdBlockClient::getFingerprint(nullptr, f))
+                        {
+                            newNumFilters++;
+                        }
+                        else if (f.isDomainOnlyFilter())
+                        {
+                            newNumNoFingerprintDomainOnlyFilters++;
+                        }
+                        else if (f.isAntiDomainOnlyFilter())
+                        {
+                            newNumNoFingerprintAntiDomainOnlyFilters++;
+                        }
+                        else
+                        {
+                            newNumNoFingerprintFilters++;
+                        }
+                        break;
                 }
             }
             lineStart = p + 1;
@@ -1385,25 +1379,25 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
 
     Filter *newFilters = new Filter[newNumFilters + numFilters];
     Filter *newCosmeticFilters =
-        new Filter[newNumCosmeticFilters + numCosmeticFilters];
+            new Filter[newNumCosmeticFilters + numCosmeticFilters];
     Filter *newHtmlFilters =
-        new Filter[newNumHtmlFilters + numHtmlFilters];
+            new Filter[newNumHtmlFilters + numHtmlFilters];
     Filter *newExceptionFilters =
-        new Filter[newNumExceptionFilters + numExceptionFilters];
+            new Filter[newNumExceptionFilters + numExceptionFilters];
     Filter *newNoFingerprintFilters =
-        new Filter[newNumNoFingerprintFilters + numNoFingerprintFilters];
+            new Filter[newNumNoFingerprintFilters + numNoFingerprintFilters];
     Filter *newNoFingerprintExceptionFilters =
-        new Filter[newNumNoFingerprintExceptionFilters + numNoFingerprintExceptionFilters];
+            new Filter[newNumNoFingerprintExceptionFilters + numNoFingerprintExceptionFilters];
     Filter *newNoFingerprintDomainOnlyFilters =
-        new Filter[newNumNoFingerprintDomainOnlyFilters +
-                   numNoFingerprintDomainOnlyFilters];
+            new Filter[newNumNoFingerprintDomainOnlyFilters +
+                       numNoFingerprintDomainOnlyFilters];
     Filter *newNoFingerprintAntiDomainOnlyFilters =
-        new Filter[newNumNoFingerprintAntiDomainOnlyFilters +
-                   numNoFingerprintAntiDomainOnlyFilters];
+            new Filter[newNumNoFingerprintAntiDomainOnlyFilters +
+                       numNoFingerprintAntiDomainOnlyFilters];
     Filter *newNoFingerprintDomainOnlyExceptionFilters =
-        new Filter[newNumNoFingerprintDomainOnlyExceptionFilters + numNoFingerprintDomainOnlyExceptionFilters];
+            new Filter[newNumNoFingerprintDomainOnlyExceptionFilters + numNoFingerprintDomainOnlyExceptionFilters];
     Filter *newNoFingerprintAntiDomainOnlyExceptionFilters =
-        new Filter[newNumNoFingerprintAntiDomainOnlyExceptionFilters + numNoFingerprintAntiDomainOnlyExceptionFilters];
+            new Filter[newNumNoFingerprintAntiDomainOnlyExceptionFilters + numNoFingerprintAntiDomainOnlyExceptionFilters];
 
     memset(newFilters, 0,
            sizeof(Filter) * (newNumFilters + numFilters));
@@ -1436,11 +1430,11 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
     Filter *curNoFingerprintExceptionFilters = newNoFingerprintExceptionFilters;
     Filter *curNoFingerprintDomainOnlyFilters = newNoFingerprintDomainOnlyFilters;
     Filter *curNoFingerprintAntiDomainOnlyFilters =
-        newNoFingerprintAntiDomainOnlyFilters;
+            newNoFingerprintAntiDomainOnlyFilters;
     Filter *curNoFingerprintDomainOnlyExceptionFilters =
-        newNoFingerprintDomainOnlyExceptionFilters;
+            newNoFingerprintDomainOnlyExceptionFilters;
     Filter *curNoFingerprintAntiDomainOnlyExceptionFilters =
-        newNoFingerprintAntiDomainOnlyExceptionFilters;
+            newNoFingerprintAntiDomainOnlyExceptionFilters;
 
     // If we've had a parse before copy the old data into the new data structure
     if (filters || cosmeticFilters || htmlFilters || exceptionFilters ||
@@ -1512,11 +1506,11 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
         curNoFingerprintExceptionFilters += numNoFingerprintExceptionFilters;
         curNoFingerprintDomainOnlyFilters += numNoFingerprintDomainOnlyFilters;
         curNoFingerprintAntiDomainOnlyFilters +=
-            numNoFingerprintAntiDomainOnlyFilters;
+                numNoFingerprintAntiDomainOnlyFilters;
         curNoFingerprintDomainOnlyExceptionFilters +=
-            numNoFingerprintDomainOnlyExceptionFilters;
+                numNoFingerprintDomainOnlyExceptionFilters;
         curNoFingerprintAntiDomainOnlyExceptionFilters +=
-            numNoFingerprintAntiDomainOnlyExceptionFilters;
+                numNoFingerprintAntiDomainOnlyExceptionFilters;
     }
 
     // And finally update with the new counts
@@ -1528,11 +1522,11 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
     numNoFingerprintExceptionFilters += newNumNoFingerprintExceptionFilters;
     numNoFingerprintDomainOnlyFilters += newNumNoFingerprintDomainOnlyFilters;
     numNoFingerprintAntiDomainOnlyFilters +=
-        newNumNoFingerprintAntiDomainOnlyFilters;
+            newNumNoFingerprintAntiDomainOnlyFilters;
     numNoFingerprintDomainOnlyExceptionFilters +=
-        newNumNoFingerprintDomainOnlyExceptionFilters;
+            newNumNoFingerprintDomainOnlyExceptionFilters;
     numNoFingerprintAntiDomainOnlyExceptionFilters +=
-        newNumNoFingerprintAntiDomainOnlyExceptionFilters;
+            newNumNoFingerprintAntiDomainOnlyExceptionFilters;
     numHostAnchoredFilters += newNumHostAnchoredFilters;
     numHostAnchoredExceptionFilters += newNumHostAnchoredExceptionFilters;
 
@@ -1546,9 +1540,9 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
     noFingerprintDomainOnlyFilters = newNoFingerprintDomainOnlyFilters;
     noFingerprintAntiDomainOnlyFilters = newNoFingerprintAntiDomainOnlyFilters;
     noFingerprintDomainOnlyExceptionFilters =
-        newNoFingerprintDomainOnlyExceptionFilters;
+            newNoFingerprintDomainOnlyExceptionFilters;
     noFingerprintAntiDomainOnlyExceptionFilters =
-        newNoFingerprintAntiDomainOnlyExceptionFilters;
+            newNoFingerprintAntiDomainOnlyExceptionFilters;
 
     p = input;
     lineStart = p;
@@ -1567,79 +1561,79 @@ bool AdBlockClient::parse(const char *input, bool preserveRules)
             {
                 switch (f.filterType & FTListTypesMask)
                 {
-                case FTException:
-                    if (f.filterType & FTHostOnly)
-                    {
-                        // do nothing, handled by hash set.
-                    }
-                    else if (AdBlockClient::getFingerprint(nullptr, f))
-                    {
-                        (*curExceptionFilters).swapData(&f);
-                        curExceptionFilters++;
-                    }
-                    else if (f.isDomainOnlyFilter())
-                    {
-                        AddFilterDomainsToHashSet(&f,
-                                                  noFingerprintDomainExceptionHashSet);
-                        (*curNoFingerprintDomainOnlyExceptionFilters).swapData(&f);
-                        curNoFingerprintDomainOnlyExceptionFilters++;
-                    }
-                    else if (f.isAntiDomainOnlyFilter())
-                    {
-                        AddFilterDomainsToHashSet(&f,
-                                                  noFingerprintAntiDomainExceptionHashSet);
-                        (*curNoFingerprintAntiDomainOnlyExceptionFilters).swapData(&f);
-                        curNoFingerprintAntiDomainOnlyExceptionFilters++;
-                    }
-                    else
-                    {
-                        (*curNoFingerprintExceptionFilters).swapData(&f);
-                        curNoFingerprintExceptionFilters++;
-                    }
-                    break;
-                case FTElementHiding:
-                case FTElementHidingException:
-                    (*curCosmeticFilters).swapData(&f);
-                    curCosmeticFilters++;
-                    break;
-                case FTHTMLFiltering:
-                    (*curHtmlFilters).swapData(&f);
-                    curHtmlFilters++;
-                    break;
-                case FTEmpty:
-                case FTComment:
-                    // No need to store
-                    break;
-                default:
-                    if (f.filterType & FTHostOnly)
-                    {
-                        // Do nothing
-                    }
-                    else if (AdBlockClient::getFingerprint(nullptr, f))
-                    {
-                        (*curFilters).swapData(&f);
-                        curFilters++;
-                    }
-                    else if (f.isDomainOnlyFilter())
-                    {
-                        AddFilterDomainsToHashSet(&f,
-                                                  noFingerprintDomainHashSet);
-                        (*curNoFingerprintDomainOnlyFilters).swapData(&f);
-                        curNoFingerprintDomainOnlyFilters++;
-                    }
-                    else if (f.isAntiDomainOnlyFilter())
-                    {
-                        AddFilterDomainsToHashSet(&f,
-                                                  noFingerprintAntiDomainHashSet);
-                        (*curNoFingerprintAntiDomainOnlyFilters).swapData(&f);
-                        curNoFingerprintAntiDomainOnlyFilters++;
-                    }
-                    else
-                    {
-                        (*curNoFingerprintFilters).swapData(&f);
-                        curNoFingerprintFilters++;
-                    }
-                    break;
+                    case FTException:
+                        if (f.filterType & FTHostOnly)
+                        {
+                            // do nothing, handled by hash set.
+                        }
+                        else if (AdBlockClient::getFingerprint(nullptr, f))
+                        {
+                            (*curExceptionFilters).swapData(&f);
+                            curExceptionFilters++;
+                        }
+                        else if (f.isDomainOnlyFilter())
+                        {
+                            AddFilterDomainsToHashSet(&f,
+                                                      noFingerprintDomainExceptionHashSet);
+                            (*curNoFingerprintDomainOnlyExceptionFilters).swapData(&f);
+                            curNoFingerprintDomainOnlyExceptionFilters++;
+                        }
+                        else if (f.isAntiDomainOnlyFilter())
+                        {
+                            AddFilterDomainsToHashSet(&f,
+                                                      noFingerprintAntiDomainExceptionHashSet);
+                            (*curNoFingerprintAntiDomainOnlyExceptionFilters).swapData(&f);
+                            curNoFingerprintAntiDomainOnlyExceptionFilters++;
+                        }
+                        else
+                        {
+                            (*curNoFingerprintExceptionFilters).swapData(&f);
+                            curNoFingerprintExceptionFilters++;
+                        }
+                        break;
+                    case FTElementHiding:
+                    case FTElementHidingException:
+                        (*curCosmeticFilters).swapData(&f);
+                        curCosmeticFilters++;
+                        break;
+                    case FTHTMLFiltering:
+                        (*curHtmlFilters).swapData(&f);
+                        curHtmlFilters++;
+                        break;
+                    case FTEmpty:
+                    case FTComment:
+                        // No need to store
+                        break;
+                    default:
+                        if (f.filterType & FTHostOnly)
+                        {
+                            // Do nothing
+                        }
+                        else if (AdBlockClient::getFingerprint(nullptr, f))
+                        {
+                            (*curFilters).swapData(&f);
+                            curFilters++;
+                        }
+                        else if (f.isDomainOnlyFilter())
+                        {
+                            AddFilterDomainsToHashSet(&f,
+                                                      noFingerprintDomainHashSet);
+                            (*curNoFingerprintDomainOnlyFilters).swapData(&f);
+                            curNoFingerprintDomainOnlyFilters++;
+                        }
+                        else if (f.isAntiDomainOnlyFilter())
+                        {
+                            AddFilterDomainsToHashSet(&f,
+                                                      noFingerprintAntiDomainHashSet);
+                            (*curNoFingerprintAntiDomainOnlyFilters).swapData(&f);
+                            curNoFingerprintAntiDomainOnlyFilters++;
+                        }
+                        else
+                        {
+                            (*curNoFingerprintFilters).swapData(&f);
+                            curNoFingerprintFilters++;
+                        }
+                        break;
                 }
             }
             lineStart = p + 1;
@@ -1723,7 +1717,7 @@ char *AdBlockClient::serialize(int *totalSize,
 {
     *totalSize = 0;
     int adjustedNumCosmeticFilters =
-        ignoreCosmeticFilters ? 0 : numCosmeticFilters;
+            ignoreCosmeticFilters ? 0 : numCosmeticFilters;
     int adjustedNumHtmlFilters = ignoreHtmlFilters ? 0 : numHtmlFilters;
 
     uint32_t hostAnchoredHashSetSize = 0;
@@ -1731,7 +1725,7 @@ char *AdBlockClient::serialize(int *totalSize,
     if (hostAnchoredHashSet)
     {
         hostAnchoredHashSetBuffer =
-            hostAnchoredHashSet->Serialize(&hostAnchoredHashSetSize);
+                hostAnchoredHashSet->Serialize(&hostAnchoredHashSetSize);
     }
 
     uint32_t hostAnchoredExceptionHashSetSize = 0;
@@ -1739,8 +1733,8 @@ char *AdBlockClient::serialize(int *totalSize,
     if (hostAnchoredExceptionHashSet)
     {
         hostAnchoredExceptionHashSetBuffer =
-            hostAnchoredExceptionHashSet->Serialize(
-                &hostAnchoredExceptionHashSetSize);
+                hostAnchoredExceptionHashSet->Serialize(
+                        &hostAnchoredExceptionHashSetSize);
     }
 
     uint32_t noFingerprintDomainHashSetSize = 0;
@@ -1748,7 +1742,7 @@ char *AdBlockClient::serialize(int *totalSize,
     if (noFingerprintDomainHashSet)
     {
         noFingerprintDomainHashSetBuffer =
-            noFingerprintDomainHashSet->Serialize(&noFingerprintDomainHashSetSize);
+                noFingerprintDomainHashSet->Serialize(&noFingerprintDomainHashSetSize);
     }
 
     uint32_t noFingerprintAntiDomainHashSetSize = 0;
@@ -1756,8 +1750,8 @@ char *AdBlockClient::serialize(int *totalSize,
     if (noFingerprintAntiDomainHashSet)
     {
         noFingerprintAntiDomainHashSetBuffer =
-            noFingerprintAntiDomainHashSet->Serialize(
-                &noFingerprintAntiDomainHashSetSize);
+                noFingerprintAntiDomainHashSet->Serialize(
+                        &noFingerprintAntiDomainHashSetSize);
     }
 
     uint32_t noFingerprintDomainExceptionHashSetSize = 0;
@@ -1765,8 +1759,8 @@ char *AdBlockClient::serialize(int *totalSize,
     if (noFingerprintDomainExceptionHashSet)
     {
         noFingerprintDomainExceptionHashSetBuffer =
-            noFingerprintDomainExceptionHashSet->Serialize(
-                &noFingerprintDomainExceptionHashSetSize);
+                noFingerprintDomainExceptionHashSet->Serialize(
+                        &noFingerprintDomainExceptionHashSetSize);
     }
 
     uint32_t noFingerprintAntiDomainExceptionHashSetSize = 0;
@@ -1774,8 +1768,8 @@ char *AdBlockClient::serialize(int *totalSize,
     if (noFingerprintAntiDomainExceptionHashSet)
     {
         noFingerprintAntiDomainExceptionHashSetBuffer =
-            noFingerprintAntiDomainExceptionHashSet->Serialize(
-                &noFingerprintAntiDomainExceptionHashSetSize);
+                noFingerprintAntiDomainExceptionHashSet->Serialize(
+                        &noFingerprintAntiDomainExceptionHashSetSize);
     }
 
     // Get the number of bytes that we'll need
@@ -1816,8 +1810,8 @@ char *AdBlockClient::serialize(int *totalSize,
 
     *totalSize += bloomFilter ? bloomFilter->getByteBufferSize() : 0;
     *totalSize += exceptionBloomFilter
-                      ? exceptionBloomFilter->getByteBufferSize()
-                      : 0;
+                  ? exceptionBloomFilter->getByteBufferSize()
+                  : 0;
     *totalSize += hostAnchoredHashSetSize;
     *totalSize += hostAnchoredExceptionHashSetSize;
     *totalSize += noFingerprintDomainHashSetSize;
@@ -1969,11 +1963,11 @@ bool AdBlockClient::deserialize(char *buffer)
 {
     deserializedBuffer = buffer;
     int bloomFilterSize = 0, exceptionBloomFilterSize = 0,
-        hostAnchoredHashSetSize = 0, hostAnchoredExceptionHashSetSize = 0,
-        noFingerprintDomainHashSetSize = 0,
-        noFingerprintAntiDomainHashSetSize = 0,
-        noFingerprintDomainExceptionHashSetSize = 0,
-        noFingerprintAntiDomainExceptionHashSetSize = 0;
+            hostAnchoredHashSetSize = 0, hostAnchoredExceptionHashSetSize = 0,
+            noFingerprintDomainHashSetSize = 0,
+            noFingerprintAntiDomainHashSetSize = 0,
+            noFingerprintDomainExceptionHashSetSize = 0,
+            noFingerprintAntiDomainExceptionHashSetSize = 0;
     int pos = 0;
     sscanf(buffer + pos,
            "%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x",
@@ -2000,13 +1994,13 @@ bool AdBlockClient::deserialize(char *buffer)
     noFingerprintFilters = new Filter[numNoFingerprintFilters];
     noFingerprintExceptionFilters = new Filter[numNoFingerprintExceptionFilters];
     noFingerprintDomainOnlyFilters =
-        new Filter[numNoFingerprintDomainOnlyFilters];
+            new Filter[numNoFingerprintDomainOnlyFilters];
     noFingerprintAntiDomainOnlyFilters =
-        new Filter[numNoFingerprintAntiDomainOnlyFilters];
+            new Filter[numNoFingerprintAntiDomainOnlyFilters];
     noFingerprintDomainOnlyExceptionFilters =
-        new Filter[numNoFingerprintDomainOnlyExceptionFilters];
+            new Filter[numNoFingerprintDomainOnlyExceptionFilters];
     noFingerprintAntiDomainOnlyExceptionFilters =
-        new Filter[numNoFingerprintAntiDomainOnlyExceptionFilters];
+            new Filter[numNoFingerprintAntiDomainOnlyExceptionFilters];
 
     pos += deserializeFilters(buffer + pos, filters, numFilters);
     pos += deserializeFilters(buffer + pos,

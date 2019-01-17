@@ -37,7 +37,7 @@
       app:layout_constraintStart_toEndOf="@+id/page_preview"
       app:layout_constraintTop_toTopOf="parent"
       app:layout_constraintVertical_bias="0.612"
-      tools:text="@tools:sample/lorem[7:90]" />
+      tools:text="@tools:sample/lorem[10:90]/random" />
 
   <TextView
       android:id="@+id/page_url"

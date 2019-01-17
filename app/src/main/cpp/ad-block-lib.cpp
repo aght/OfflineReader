@@ -8,23 +8,22 @@
 
 #include "ad_block_client.h"
 
-// Memory leak?
 static AdBlockClient client;
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_aght_offlinereader_AdBlockWebViewClient_initAdBlocker(
         JNIEnv* env,
-        jclass,
+        jobject,
         jbyteArray filterBytes) {
-    jboolean isCopyFilterBytes;
+    jboolean isCopyByteArray;
 
-    client = AdBlockClient{};
+    jbyte* tmp = env->GetByteArrayElements(filterBytes, &isCopyByteArray);
 
-    jbyte* tmp = env->GetByteArrayElements(filterBytes, &isCopyFilterBytes);
+    char* buffer = (char*) tmp;
 
-    bool result = client.deserialize(reinterpret_cast<char*>(tmp));
+    bool result = client.deserialize(buffer);
 
-    if (isCopyFilterBytes == JNI_TRUE) {
+    if (isCopyByteArray == JNI_TRUE) {
         env->ReleaseByteArrayElements(filterBytes, tmp, 0);
     }
 
@@ -35,23 +34,23 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_com_aght_offlinereader_AdBlockWebViewClient_shouldBlockUrl(
         JNIEnv* env,
         jobject,
-        jstring currentPageDomain,
-        jstring urlToCheck) {
+        jstring domain_str,
+        jstring url_str) {
 
-    jboolean isCopyCurrentPageDomain;
-    jboolean isCopyUrlToCheck;
+    jboolean isCopyDomain;
+    jboolean isCopyUrl;
 
-    const char* domain = env->GetStringUTFChars(currentPageDomain, &isCopyCurrentPageDomain);
-    const char* url = env->GetStringUTFChars(urlToCheck, &isCopyUrlToCheck);
+    const char* domain = env->GetStringUTFChars(domain_str, &isCopyDomain);
+    const char* url = env->GetStringUTFChars(url_str, &isCopyUrl);
 
     bool shouldBlock = client.matches(url, FONoFilterOption, domain);
 
-    if (isCopyCurrentPageDomain == JNI_TRUE) {
-        env->ReleaseStringUTFChars(currentPageDomain, domain);
+    if (isCopyDomain == JNI_TRUE) {
+        env->ReleaseStringUTFChars(domain_str, domain);
     }
 
-    if (isCopyUrlToCheck == JNI_TRUE) {
-        env->ReleaseStringUTFChars(urlToCheck, url);
+    if (isCopyUrl == JNI_TRUE) {
+        env->ReleaseStringUTFChars(url_str, url);
     }
 
     return shouldBlock;
