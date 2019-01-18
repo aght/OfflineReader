@@ -13,15 +13,16 @@ public class AdBlockProvider {
 
     private final long handle;
 
+    // MUST be an instance variable, else native code will crash
     private byte[] filterData;
 
     private native long createAdBlockClient();
 
-    private native void destroyAdBlockClient(long handle);
+    private native void destroyAdBlockClient(@NonNull long handle);
 
     private native boolean initAdBlockClient(@NonNull long handle, @NonNull byte[] filterData);
 
-    private native boolean shouldBlockUrl(long handle, String currentPageDomain, String urlToCheck);
+    private native boolean shouldBlockUrl(@NonNull long handle, String currentPageDomain, String urlToCheck);
 
     public AdBlockProvider(@NonNull byte[] filterData) {
         handle = createAdBlockClient();
@@ -36,5 +37,6 @@ public class AdBlockProvider {
 
     public void destroy() {
         destroyAdBlockClient(handle);
+        filterData = null;
     }
 }

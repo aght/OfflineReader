@@ -20,7 +20,7 @@ Java_com_aght_offlinereader_adblock_webview_AdBlockProvider_destroyAdBlockClient
         JNIEnv *env,
         jobject,
         jlong handle) {
-    delete reinterpret_cast<AdBlockClient*>(handle);
+    delete reinterpret_cast<AdBlockClient *>(handle);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -28,17 +28,15 @@ Java_com_aght_offlinereader_adblock_webview_AdBlockProvider_initAdBlockClient(
         JNIEnv *env,
         jobject,
         jlong handle,
-        jbyteArray filterBytes) {
-    jboolean isCopyByteArray;
+        jbyteArray filterData) {
 
-    jbyte *tmp = env->GetByteArrayElements(filterBytes, &isCopyByteArray);
+    bool result = false;
 
-    char *buffer = reinterpret_cast<char *>(tmp);
-
-    bool result = reinterpret_cast<AdBlockClient*>(handle)->deserialize(buffer);
-
-    if (isCopyByteArray == JNI_TRUE) {
-        env->ReleaseByteArrayElements(filterBytes, tmp, 0);
+    jbyte *data = env->GetByteArrayElements(filterData, NULL);
+    if (data != nullptr) {
+        char *buffer = reinterpret_cast<char *>(data);
+        result = reinterpret_cast<AdBlockClient *>(handle)->deserialize(buffer);
+        env->ReleaseByteArrayElements(filterData, data, JNI_ABORT);
     }
 
     return result;
@@ -49,22 +47,21 @@ Java_com_aght_offlinereader_adblock_webview_AdBlockProvider_shouldBlockUrl(
         JNIEnv *env,
         jobject,
         jlong handle,
-        jstring _currentPageDomain,
-        jstring _urlToCheck) {
-    jboolean isCopyDomain;
-    jboolean isCopyUrl;
+        jstring domain,
+        jstring url) {
+    const char *currentPageDomain = env->GetStringUTFChars(domain, nullptr);
+    const char *urlToCheck = env->GetStringUTFChars(url, nullptr);
 
-    const char *currentPageDomain = env->GetStringUTFChars(_currentPageDomain, &isCopyDomain);
-    const char *urlToCheck = env->GetStringUTFChars(_urlToCheck, &isCopyUrl);
+    bool shouldBlock = reinterpret_cast<AdBlockClient *>(handle)->matches(urlToCheck,
+                                                                          FONoFilterOption,
+                                                                          currentPageDomain);
 
-    bool shouldBlock = reinterpret_cast<AdBlockClient*>(handle)->matches(urlToCheck, FONoFilterOption, currentPageDomain);
-
-    if (isCopyDomain == JNI_TRUE) {
-        env->ReleaseStringUTFChars(_currentPageDomain, currentPageDomain);
+    if (currentPageDomain != nullptr) {
+        env->ReleaseStringUTFChars(domain, currentPageDomain);
     }
 
-    if (isCopyUrl == JNI_TRUE) {
-        env->ReleaseStringUTFChars(_urlToCheck, urlToCheck);
+    if (urlToCheck != nullptr) {
+        env->ReleaseStringUTFChars(url, urlToCheck);
     }
 
     return shouldBlock;

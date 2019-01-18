@@ -24,10 +24,15 @@
         <activity
             android:name=".WebViewActivity"
             android:configChanges="orientation|screenSize" />
-        <activity android:name=".SaveActivity">
+        <activity
+            android:name=".SaveActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
