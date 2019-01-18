@@ -26,6 +26,14 @@ public class WebViewActivity extends AppCompatActivity {
 //        webView.saveWebArchive("");
     }
 
+    @Override
+    public void onBackPressed() {
+        if (adBlockWebView.canGoBack()) {
+            adBlockWebView.goBack();
+        } else {
+            finish();
+        }
+    }
 
     @Override
     public void onDestroy() {
