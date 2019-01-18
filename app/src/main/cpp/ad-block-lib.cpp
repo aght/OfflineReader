@@ -1,5 +1,5 @@
 //
-// Created by Xeror on 1/12/2019.
+// Created by Andy on 1/12/2019.
 //
 
 #include <jni.h>
@@ -8,20 +8,34 @@
 
 #include "ad_block_client.h"
 
-static AdBlockClient client;
+extern "C" JNIEXPORT jlong JNICALL
+Java_com_aght_offlinereader_adblock_webview_AdBlockProvider_createAdBlockClient(
+        JNIEnv *env,
+        jobject) {
+    return reinterpret_cast<jlong>(new AdBlockClient());
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_aght_offlinereader_adblock_webview_AdBlockProvider_destroyAdBlockClient(
+        JNIEnv *env,
+        jobject,
+        jlong handle) {
+    delete reinterpret_cast<AdBlockClient*>(handle);
+}
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_aght_offlinereader_adblock_webview_AdBlockWebViewClient_initAdBlockClient(
-        JNIEnv* env,
-        jclass,
+Java_com_aght_offlinereader_adblock_webview_AdBlockProvider_initAdBlockClient(
+        JNIEnv *env,
+        jobject,
+        jlong handle,
         jbyteArray filterBytes) {
     jboolean isCopyByteArray;
 
-    jbyte* tmp = env->GetByteArrayElements(filterBytes, &isCopyByteArray);
+    jbyte *tmp = env->GetByteArrayElements(filterBytes, &isCopyByteArray);
 
-    char* buffer = reinterpret_cast<char*>(tmp);
+    char *buffer = reinterpret_cast<char *>(tmp);
 
-    bool result = client.deserialize(buffer);
+    bool result = reinterpret_cast<AdBlockClient*>(handle)->deserialize(buffer);
 
     if (isCopyByteArray == JNI_TRUE) {
         env->ReleaseByteArrayElements(filterBytes, tmp, 0);
@@ -31,26 +45,26 @@ Java_com_aght_offlinereader_adblock_webview_AdBlockWebViewClient_initAdBlockClie
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_aght_offlinereader_adblock_webview_AdBlockWebViewClient_shouldBlockUrl(
-        JNIEnv* env,
+Java_com_aght_offlinereader_adblock_webview_AdBlockProvider_shouldBlockUrl(
+        JNIEnv *env,
         jobject,
-        jstring domain_str,
-        jstring url_str) {
-
+        jlong handle,
+        jstring _currentPageDomain,
+        jstring _urlToCheck) {
     jboolean isCopyDomain;
     jboolean isCopyUrl;
 
-    const char* domain = env->GetStringUTFChars(domain_str, &isCopyDomain);
-    const char* url = env->GetStringUTFChars(url_str, &isCopyUrl);
+    const char *currentPageDomain = env->GetStringUTFChars(_currentPageDomain, &isCopyDomain);
+    const char *urlToCheck = env->GetStringUTFChars(_urlToCheck, &isCopyUrl);
 
-    bool shouldBlock = client.matches(url, FONoFilterOption, domain);
+    bool shouldBlock = reinterpret_cast<AdBlockClient*>(handle)->matches(urlToCheck, FONoFilterOption, currentPageDomain);
 
     if (isCopyDomain == JNI_TRUE) {
-        env->ReleaseStringUTFChars(domain_str, domain);
+        env->ReleaseStringUTFChars(_currentPageDomain, currentPageDomain);
     }
 
     if (isCopyUrl == JNI_TRUE) {
-        env->ReleaseStringUTFChars(url_str, url);
+        env->ReleaseStringUTFChars(_urlToCheck, urlToCheck);
     }
 
     return shouldBlock;

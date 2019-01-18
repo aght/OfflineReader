@@ -696,10 +696,11 @@ void AdBlockClient::clear()
         badFingerprintsHashSet = nullptr;
     }
 
-    if (deserializedBuffer) {
-        delete deserializedBuffer;
-        deserializedBuffer = nullptr;
-    }
+    // Potentially required
+//    if (deserializedBuffer) {
+//        delete deserializedBuffer;
+//        deserializedBuffer = nullptr;
+//    }
 
     numFilters = 0;
     numCosmeticFilters = 0;
