@@ -2,6 +2,7 @@ package com.aght.offlinereader;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.arch.persistence.room.Room;
 import android.os.Handler;
 import android.util.Log;
 import android.webkit.WebChromeClient;
@@ -9,6 +10,8 @@ import android.webkit.WebView;
 
 import com.aght.offlinereader.adblock.webview.AdBlockWebView;
 import com.aght.offlinereader.adblock.webview.AdBlockWebViewClient;
+import com.aght.offlinereader.database.WebPage;
+import com.aght.offlinereader.database.WebPageDatabase;
 
 
 public class DownloadJobService extends JobService {
@@ -16,21 +19,21 @@ public class DownloadJobService extends JobService {
     private final String TAG = DownloadJobService.class.getSimpleName();
 
     private AdBlockWebView adBlockWebView;
+    private String webPageTitle;
+
     private JobParameters parameters;
 
     private Handler handler = new Handler();
     private Runnable worker;
 
     @Override
-    public boolean onStartJob(JobParameters parameters) {
+    public boolean onStartJob(final JobParameters parameters) {
         this.parameters = parameters;
-        final JobParameters tmp = parameters;
 
-        // TODO: Convert to AsyncTask
         worker = new Runnable() {
             @Override
             public void run() {
-                String url = tmp.getExtras().getString("url");
+                String url = parameters.getExtras().getString("url");
                 loadWebPage(url);
             }
         };
@@ -42,9 +45,6 @@ public class DownloadJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters parameters) {
-        handler.removeCallbacks(worker);
-        cleanup();
-
         return false; // Do not reschedule the job
     }
 
@@ -59,7 +59,9 @@ public class DownloadJobService extends JobService {
         return new AdBlockWebViewClient() {
             @Override
             public void onPageFinished(WebView webView, String url) {
-                saveWebPage();
+                Log.d(TAG, "Finished loading: " + url);
+
+                saveWebPage(url);
             }
         };
     }
@@ -68,19 +70,45 @@ public class DownloadJobService extends JobService {
         return new WebChromeClient() {
             @Override
             public void onProgressChanged(WebView webView, int newProgress) {
-                AdBlockWebView tmp = (AdBlockWebView) webView;
-                Log.d(TAG, "Loading: " + tmp.getCurrentUrl() + ": " + newProgress + "%");
+                String url = ((AdBlockWebView) webView).getCurrentUrl();
+                Log.d(TAG, "Loading: " + url + ": " + newProgress + "%");
+            }
+
+            @Override
+            public void onReceivedTitle(WebView view, String title) {
+                webPageTitle = title;
             }
         };
     }
 
-    private void saveWebPage() {
-        Log.d(TAG, "Finished job with id: " + parameters.getJobId());
+    private void saveWebPage(final String url) {
+
+        final WebPage page = new WebPage();
+        page.setWebPageTitle(webPageTitle);
+        page.setWebPageUrl(url);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                WebPageDatabase db = Room.databaseBuilder(
+                        App.getContext(),
+                        WebPageDatabase.class,
+                        "webpage-db").build();
+
+                db.access().insertWebPage(page);
+            }
+        }).start();
+
+        Log.d(TAG, page.getFileName());
+//        Log.e(TAG, App.getContext().getFilesDir().getAbsolutePath());
 
         jobFinished(parameters, false);
+        cleanup();
     }
 
     private void cleanup() {
         adBlockWebView.destroy();
+        handler.removeCallbacks(worker);
+        Log.d(TAG, "Finished job with id: " + parameters.getJobId());
     }
 }

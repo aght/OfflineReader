@@ -59,21 +59,16 @@ public class SaveActivity extends Activity {
         JobInfo jobInfo = new JobInfo.Builder(0, componentName)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
                 .setExtras(bundle)
-                .setMinimumLatency(1)
-                .setOverrideDeadline(1)
                 .build();
 
         JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+
         int result = jobScheduler.schedule(jobInfo);
+
         if (result == JobScheduler.RESULT_SUCCESS) {
             Log.d(TAG, "Started download service: " + url);
         } else {
             Log.d(TAG, "Failed to start download service: " + url);
         }
-    }
-
-    @Override
-    public void finish() {
-        super.finish();
     }
 }
