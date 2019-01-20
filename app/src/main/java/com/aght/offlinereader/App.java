@@ -5,7 +5,7 @@ import android.content.Context;
 
 import java.lang.ref.WeakReference;
 
-public class OfflineReader extends Application {
+public class App extends Application {
     private static WeakReference<Context> contextRef;
 
     @Override

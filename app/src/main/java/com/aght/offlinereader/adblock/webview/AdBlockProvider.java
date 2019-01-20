@@ -3,6 +3,13 @@ package com.aght.offlinereader.adblock.webview;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.aght.offlinereader.App;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 public class AdBlockProvider {
 
     static {
@@ -11,24 +18,26 @@ public class AdBlockProvider {
 
     private static final String TAG = "AdBlockProvider";
 
+    private static final String AD_BLOCK_DATA_FILE = "filter.dat";
+
     private final long handle;
 
-    // MUST be an instance variable, else native code will crash
+    // MUST be an instance variable, else native code will crash, due to local variable being
+    // destroyed
     private byte[] filterData;
 
     private native long createAdBlockClient();
 
-    private native void destroyAdBlockClient(@NonNull long handle);
+    private native void destroyAdBlockClient(long handle);
 
-    private native boolean initAdBlockClient(@NonNull long handle, @NonNull byte[] filterData);
+    private native boolean initAdBlockClient(long handle, @NonNull byte[] filterData);
 
-    private native boolean shouldBlockUrl(@NonNull long handle, String currentPageDomain, String urlToCheck);
+    private native boolean shouldBlockUrl(long handle, String currentPageDomain, String urlToCheck);
 
-    public AdBlockProvider(@NonNull byte[] filterData) {
+    private AdBlockProvider(@NonNull byte[] filterData) {
         handle = createAdBlockClient();
         this.filterData = filterData;
         initAdBlockClient(handle, this.filterData);
-        Log.e(TAG, String.valueOf(handle));
     }
 
     public boolean shouldBlockUrl(String currentPageDomain, String urlToCheck) {
@@ -38,5 +47,21 @@ public class AdBlockProvider {
     public void destroy() {
         destroyAdBlockClient(handle);
         filterData = null;
+    }
+
+    public static AdBlockProvider newInstance() {
+        return new AdBlockProvider(getFileBytes(AD_BLOCK_DATA_FILE));
+    }
+
+
+    private static byte[] getFileBytes(String filename) {
+        try {
+            InputStream dataStream = App.getContext().getAssets().open(filename);
+            return IOUtils.toByteArray(dataStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

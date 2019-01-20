@@ -1,17 +1,9 @@
 package com.aght.offlinereader.adblock.webview;
 
-import android.support.annotation.NonNull;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
-import com.aght.offlinereader.OfflineReader;
-
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 public class AdBlockWebViewClient extends WebViewClient {
 
@@ -19,8 +11,8 @@ public class AdBlockWebViewClient extends WebViewClient {
 
     private AdBlockProvider adBlockProvider;
 
-    public AdBlockWebViewClient(AdBlockProvider provider) {
-        this.adBlockProvider = provider;
+    public AdBlockWebViewClient() {
+        this.adBlockProvider = AdBlockProvider.newInstance();
     }
 
     @Override
@@ -35,6 +27,10 @@ public class AdBlockWebViewClient extends WebViewClient {
         }
 
         return super.shouldInterceptRequest(view, request);
+    }
+
+    public void destroy() {
+        adBlockProvider.destroy();
     }
 
     private WebResourceResponse createEmptyResponse() {

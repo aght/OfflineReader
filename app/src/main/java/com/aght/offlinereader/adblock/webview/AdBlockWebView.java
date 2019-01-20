@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.webkit.WebView;
 
-import com.aght.offlinereader.OfflineReader;
+import com.aght.offlinereader.App;
 
 import org.apache.commons.io.IOUtils;
 
@@ -15,11 +15,8 @@ public class AdBlockWebView extends WebView {
 
     private static final String TAG = "AdBlockWebView";
 
-    private static final String AD_BLOCK_DATA_FILE = "filter.dat";
-
     private AdBlockWebViewClient adBlockWebViewClient;
     private AdBlockWebChromeClient adBlockWebChromeClient;
-    private AdBlockProvider adBlockProvider;
     private String currentUrl;
 
     public AdBlockWebView(Context context) {
@@ -47,16 +44,15 @@ public class AdBlockWebView extends WebView {
         return currentUrl;
     }
 
-    public void setAdBlockProvider(AdBlockProvider provider) {
-        this.adBlockProvider.destroy();
-        this.adBlockProvider = provider;
-        adBlockWebViewClient = new AdBlockWebViewClient(adBlockProvider);
-        setWebViewClient(adBlockWebViewClient);
-    }
+//    public void setAdBlockProvider(AdBlockProvider provider) {
+//        this.adBlockProvider.destroy();
+//        this.adBlockProvider = provider;
+//        adBlockWebViewClient = new AdBlockWebViewClient(adBlockProvider);
+//        setWebViewClient(adBlockWebViewClient);
+//    }
 
     private void init() {
-        adBlockProvider = new AdBlockProvider(getFileBytes(AD_BLOCK_DATA_FILE));
-        adBlockWebViewClient = new AdBlockWebViewClient(adBlockProvider);
+        adBlockWebViewClient = new AdBlockWebViewClient();
         adBlockWebChromeClient = new AdBlockWebChromeClient();
 
         setWebViewClient(adBlockWebViewClient);
@@ -65,20 +61,9 @@ public class AdBlockWebView extends WebView {
         getSettings().setJavaScriptEnabled(true);
     }
 
-    private byte[] getFileBytes(String filename) {
-        try {
-            InputStream dataStream = OfflineReader.getContext().getAssets().open(filename);
-            return IOUtils.toByteArray(dataStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
     @Override
     public void destroy() {
-        adBlockProvider.destroy();
+        adBlockWebViewClient.destroy();
         super.destroy();
     }
 }

@@ -10,7 +10,6 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Patterns;
@@ -21,7 +20,6 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class HomeFragment extends Fragment {
 
@@ -29,6 +27,7 @@ public class HomeFragment extends Fragment {
 
     private SharedPreferences preferences;
     private static final String LAST_URL_COPIED_KEY = "last_url_copied";
+    private static final int SNACKBAR_DURATION = 3000;
 
     public HomeFragment() {
     }
@@ -78,7 +77,7 @@ public class HomeFragment extends Fragment {
         if (Patterns.WEB_URL.matcher(url).matches()) {
             if (preferences.getString(LAST_URL_COPIED_KEY, null) == null ||
                     !preferences.getString(LAST_URL_COPIED_KEY, null).equals(url)) {
-                preferences.edit().putString(LAST_URL_COPIED_KEY, url).commit();
+                preferences.edit().putString(LAST_URL_COPIED_KEY, url).apply();
                 promptToAdd(url);
             }
         }
@@ -92,7 +91,7 @@ public class HomeFragment extends Fragment {
         String trimmedUrl = url.substring(url.indexOf("//") + 2, url.length());
 
         Snackbar snackbar = Snackbar
-                .make(layout, "Add copied URL to your list?\n" + trimmedUrl, 3000)
+                .make(layout, "Add copied URL to list?\n" + trimmedUrl, SNACKBAR_DURATION)
                 .setAction("Add", new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {

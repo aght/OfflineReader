@@ -23,7 +23,6 @@ public class WebViewActivity extends AppCompatActivity {
 
         adBlockWebView = findViewById(R.id.ad_block_webView);
         adBlockWebView.loadUrl("https://ads-blocker.com/testing/");
-//        webView.saveWebArchive("");
     }
 
     @Override
