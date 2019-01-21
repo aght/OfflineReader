@@ -5,20 +5,10 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.net.NetworkRequest;
-import android.net.NetworkSpecifier;
 import android.os.PersistableBundle;
-import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
 import android.widget.Toast;
-
-import com.aght.offlinereader.adblock.webview.AdBlockWebChromeClient;
-import com.aght.offlinereader.adblock.webview.AdBlockWebView;
-import com.aght.offlinereader.adblock.webview.AdBlockWebViewClient;
 
 public class SaveActivity extends Activity {
 
@@ -38,15 +28,14 @@ public class SaveActivity extends Activity {
     private void handleIntent(Intent intent, String action, String type) {
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equals(type)) {
-                String url = intent.getStringExtra(Intent.EXTRA_TEXT);
+                final String url = intent.getStringExtra(Intent.EXTRA_TEXT);
                 if (url != null) {
                     Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
                     startDownloadService(url);
+                    Toast.makeText(this, "Already Saved", Toast.LENGTH_SHORT).show();
                 }
             }
         }
-
-        finish();
     }
 
     private void startDownloadService(String url) {
@@ -70,5 +59,7 @@ public class SaveActivity extends Activity {
         } else {
             Log.d(TAG, "Failed to start download service: " + url);
         }
+
+        finish();
     }
 }

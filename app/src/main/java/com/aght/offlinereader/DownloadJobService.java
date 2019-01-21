@@ -13,23 +13,37 @@ import com.aght.offlinereader.adblock.webview.AdBlockWebViewClient;
 import com.aght.offlinereader.database.WebPage;
 import com.aght.offlinereader.database.WebPageDatabase;
 
+import java.io.File;
 
 public class DownloadJobService extends JobService {
 
     private final String TAG = DownloadJobService.class.getSimpleName();
 
     private AdBlockWebView adBlockWebView;
-    private String webPageTitle;
-
+    private String webPageUrl;
     private JobParameters parameters;
-
-    private Handler handler = new Handler();
+    private Handler handler;
     private Runnable worker;
+    private WebPage page;
+    private WebPageDatabase db;
 
     @Override
     public boolean onStartJob(final JobParameters parameters) {
         this.parameters = parameters;
+        this.webPageUrl = parameters.getExtras().getString("url");
+        this.db = Room.databaseBuilder(
+                App.getContext(),
+                WebPageDatabase.class,
+                "webpage-db"
+        ).allowMainThreadQueries().build();
 
+        if (db.access().findByUrl(webPageUrl) != null) {
+            Log.d(TAG, "Already saved ignoring...");
+            jobFinished(parameters, false);
+            return false;
+        }
+
+        handler = new Handler();
         worker = new Runnable() {
             @Override
             public void run() {
@@ -61,7 +75,7 @@ public class DownloadJobService extends JobService {
             public void onPageFinished(WebView webView, String url) {
                 Log.d(TAG, "Finished loading: " + url);
 
-                saveWebPage(url);
+                saveWebPage();
             }
         };
     }
@@ -76,39 +90,40 @@ public class DownloadJobService extends JobService {
 
             @Override
             public void onReceivedTitle(WebView view, String title) {
-                webPageTitle = title;
+                page = new WebPage();
+                page.setWebPageTitle(title);
+                page.setWebPageUrl(webPageUrl);
+
+                Log.d(TAG, "Title Received: " + title);
+                Log.d(TAG, "Creating database entry...");
+
+                createDatabaseEntry(page);
             }
         };
     }
 
-    private void saveWebPage(final String url) {
+    private void saveWebPage() {
+        Log.d(TAG, "Saving page to: " + App.getContext().getFilesDir().getAbsolutePath()
+                + File.pathSeparator
+                + page.getFileName());
 
-        final WebPage page = new WebPage();
-        page.setWebPageTitle(webPageTitle);
-        page.setWebPageUrl(url);
+        adBlockWebView.saveWebArchive(App.getContext().getFilesDir().getAbsolutePath()
+                + File.pathSeparator
+                + page.getFileName());
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                WebPageDatabase db = Room.databaseBuilder(
-                        App.getContext(),
-                        WebPageDatabase.class,
-                        "webpage-db").build();
-
-                db.access().insertWebPage(page);
-            }
-        }).start();
-
-        Log.d(TAG, page.getFileName());
-//        Log.e(TAG, App.getContext().getFilesDir().getAbsolutePath());
-
-        jobFinished(parameters, false);
         cleanup();
+        jobFinished(parameters, false);
     }
 
+    private void createDatabaseEntry(final WebPage page) {
+        db.access().insertWebPage(page);
+    }
+
+
     private void cleanup() {
+        Log.d(TAG, "Finished job with id: " + parameters.getJobId());
+        Log.d(TAG, "Cleaning up...");
         adBlockWebView.destroy();
         handler.removeCallbacks(worker);
-        Log.d(TAG, "Finished job with id: " + parameters.getJobId());
     }
 }

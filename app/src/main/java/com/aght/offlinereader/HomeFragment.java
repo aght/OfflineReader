@@ -1,5 +1,6 @@
 package com.aght.offlinereader;
 
+import android.arch.persistence.room.Room;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -17,6 +18,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+
+import com.aght.offlinereader.database.WebPage;
+import com.aght.offlinereader.database.WebPageDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -114,10 +118,18 @@ public class HomeFragment extends Fragment {
     }
 
     private List<SavedPage> generateTestData() {
+        WebPageDatabase db = Room.databaseBuilder(
+                App.getContext(),
+                WebPageDatabase.class,
+                "webpage-db"
+        ).allowMainThreadQueries().build();
+
+        List<WebPage> tmp = db.access().getAllWebPages();
+
         List<SavedPage> savedPages = new ArrayList<>();
 
-        for (int i = 0; i < 6; i++) {
-            savedPages.add(new SavedPage("Title: " + String.valueOf(i), "URL"));
+        for (WebPage page : tmp) {
+            savedPages.add(new SavedPage(page.getWebPageTitle(), page.getWebPageUrl()));
         }
 
         return savedPages;

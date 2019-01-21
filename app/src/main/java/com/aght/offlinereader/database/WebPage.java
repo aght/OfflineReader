@@ -15,23 +15,21 @@ public class WebPage {
 
     @PrimaryKey
     @NonNull
-    private String id;
-    private String webPageTitle;
     private String webPageUrl;
+    private String webPageTitle;
     private String fileName;
 
     public WebPage() {
-        id = UUID.randomUUID().toString();
-        fileName = id + FILE_EXT;
+        fileName = UUID.randomUUID().toString() + FILE_EXT;
     }
 
     @NonNull
-    public String getId() {
-        return id;
+    public String getWebPageUrl() {
+        return webPageUrl;
     }
 
-    public void setId(@NonNull String id) {
-        this.id = id;
+    public void setWebPageUrl(@NonNull String webPageUrl) {
+        this.webPageUrl = webPageUrl;
     }
 
     public String getWebPageTitle() {
@@ -40,14 +38,6 @@ public class WebPage {
 
     public void setWebPageTitle(String webPageTitle) {
         this.webPageTitle = webPageTitle;
-    }
-
-    public String getWebPageUrl() {
-        return webPageUrl;
-    }
-
-    public void setWebPageUrl(String webPageUrl) {
-        this.webPageUrl = webPageUrl;
     }
 
     public String getFileName() {
