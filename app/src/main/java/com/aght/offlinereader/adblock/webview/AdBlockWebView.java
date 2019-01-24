@@ -44,13 +44,6 @@ public class AdBlockWebView extends WebView {
         return currentUrl;
     }
 
-//    public void setAdBlockProvider(AdBlockProvider provider) {
-//        this.adBlockProvider.destroy();
-//        this.adBlockProvider = provider;
-//        adBlockWebViewClient = new AdBlockWebViewClient(adBlockProvider);
-//        setWebViewClient(adBlockWebViewClient);
-//    }
-
     private void init() {
         adBlockWebViewClient = new AdBlockWebViewClient();
         adBlockWebChromeClient = new AdBlockWebChromeClient();
@@ -59,6 +52,7 @@ public class AdBlockWebView extends WebView {
         setWebChromeClient(adBlockWebChromeClient);
 
         getSettings().setJavaScriptEnabled(true);
+        getSettings().setDomStorageEnabled(true);
     }
 
     @Override

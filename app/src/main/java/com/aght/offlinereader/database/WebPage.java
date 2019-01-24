@@ -11,7 +11,7 @@ import java.util.UUID;
 public class WebPage {
 
     @Ignore
-    private static final String FILE_EXT = ".mht";
+    private static final String FILE_EXT = ".mhtml";
 
     @PrimaryKey
     @NonNull
@@ -21,6 +21,7 @@ public class WebPage {
 
     public WebPage() {
         fileName = UUID.randomUUID().toString() + FILE_EXT;
+
     }
 
     @NonNull

@@ -12,10 +12,6 @@ import java.io.InputStream;
 
 public class AdBlockProvider {
 
-    static {
-        System.loadLibrary("ad-block-lib");
-    }
-
     private static final String TAG = "AdBlockProvider";
 
     private static final String AD_BLOCK_DATA_FILE = "filter.dat";
@@ -46,7 +42,7 @@ public class AdBlockProvider {
 
     public void destroy() {
         destroyAdBlockClient(handle);
-        filterData = null;
+//        filterData = null;
     }
 
     public static AdBlockProvider newInstance() {

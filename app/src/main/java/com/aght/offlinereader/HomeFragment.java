@@ -1,6 +1,5 @@
 package com.aght.offlinereader;
 
-import android.arch.persistence.room.Room;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -29,6 +28,7 @@ public class HomeFragment extends Fragment {
 
     private RecyclerView savedPagesView;
 
+    private List<SavedPage> savedPages;
     private SharedPreferences preferences;
     private static final String LAST_URL_COPIED_KEY = "last_url_copied";
     private static final int SNACKBAR_DURATION = 3000;
@@ -55,14 +55,18 @@ public class HomeFragment extends Fragment {
 
         savedPagesView = rootView.findViewById(R.id.saved_pages_view);
 
+        savedPages = getDatabaseEntries();
+
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(rootView.getContext());
         savedPagesView.setLayoutManager(layoutManager);
         savedPagesView.setItemAnimator(new DefaultItemAnimator());
-        savedPagesView.setAdapter(new SavedPageAdapter(generateTestData()));
+        savedPagesView.setAdapter(new SavedPageAdapter(savedPages));
         savedPagesView.addOnItemTouchListener(new RecyclerViewTouchListener(getActivity(), savedPagesView, new RecyclerViewTouchListener.ClickListener() {
             @Override
             public void onClick(View view, int position) {
-                startActivity(new Intent(getActivity(), WebViewActivity.class));
+                Intent i = new Intent(getActivity(), WebViewActivity.class);
+                i.putExtra("url", savedPages.get(position).getPageUrl());
+                startActivity(i);
             }
 
             @Override
@@ -117,12 +121,8 @@ public class HomeFragment extends Fragment {
         return null;
     }
 
-    private List<SavedPage> generateTestData() {
-        WebPageDatabase db = Room.databaseBuilder(
-                App.getContext(),
-                WebPageDatabase.class,
-                "webpage-db"
-        ).allowMainThreadQueries().build();
+    private List<SavedPage> getDatabaseEntries() {
+        WebPageDatabase db = WebPageDatabase.getInstance();
 
         List<WebPage> tmp = db.access().getAllWebPages();
 

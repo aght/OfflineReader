@@ -2,7 +2,6 @@ package com.aght.offlinereader;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
-import android.arch.persistence.room.Room;
 import android.os.Handler;
 import android.util.Log;
 import android.webkit.WebChromeClient;
@@ -25,34 +24,22 @@ public class DownloadJobService extends JobService {
     private Handler handler;
     private Runnable worker;
     private WebPage page;
-    private WebPageDatabase db;
+    private WebPageDatabase database;
 
     @Override
     public boolean onStartJob(final JobParameters parameters) {
         this.parameters = parameters;
         this.webPageUrl = parameters.getExtras().getString("url");
-        this.db = Room.databaseBuilder(
-                App.getContext(),
-                WebPageDatabase.class,
-                "webpage-db"
-        ).allowMainThreadQueries().build();
+        this.database = WebPageDatabase.getInstance();
 
-        if (db.access().findByUrl(webPageUrl) != null) {
+        if (database.access().findByUrl(webPageUrl) != null) {
             Log.d(TAG, "Already saved ignoring...");
             jobFinished(parameters, false);
             return false;
         }
 
-        handler = new Handler();
-        worker = new Runnable() {
-            @Override
-            public void run() {
-                String url = parameters.getExtras().getString("url");
-                loadWebPage(url);
-            }
-        };
-
-        handler.post(worker);
+        String url = parameters.getExtras().getString("url");
+        loadWebPage(url);
 
         return true; // Continue running
     }
@@ -66,6 +53,7 @@ public class DownloadJobService extends JobService {
         adBlockWebView = new AdBlockWebView(App.getContext());
         adBlockWebView.setWebViewClient(createAdBlockWebViewClient());
         adBlockWebView.setWebChromeClient(createWebChromeClient());
+        adBlockWebView.getSettings().setJavaScriptEnabled(true);
         adBlockWebView.loadUrl(url);
     }
 
@@ -75,7 +63,15 @@ public class DownloadJobService extends JobService {
             public void onPageFinished(WebView webView, String url) {
                 Log.d(TAG, "Finished loading: " + url);
 
-                saveWebPage();
+                String path = App.getContext().getFilesDir().getAbsolutePath()
+                        + File.separator
+                        + page.getFileName();
+                Log.d(TAG, "Saving page to: " + path);
+
+                adBlockWebView.saveWebArchive(path);
+
+                cleanup();
+                jobFinished(parameters, false);
             }
         };
     }
@@ -102,28 +98,13 @@ public class DownloadJobService extends JobService {
         };
     }
 
-    private void saveWebPage() {
-        Log.d(TAG, "Saving page to: " + App.getContext().getFilesDir().getAbsolutePath()
-                + File.pathSeparator
-                + page.getFileName());
-
-        adBlockWebView.saveWebArchive(App.getContext().getFilesDir().getAbsolutePath()
-                + File.pathSeparator
-                + page.getFileName());
-
-        cleanup();
-        jobFinished(parameters, false);
-    }
-
     private void createDatabaseEntry(final WebPage page) {
-        db.access().insertWebPage(page);
+        database.access().insertWebPage(page);
     }
-
 
     private void cleanup() {
         Log.d(TAG, "Finished job with id: " + parameters.getJobId());
         Log.d(TAG, "Cleaning up...");
         adBlockWebView.destroy();
-        handler.removeCallbacks(worker);
     }
 }
