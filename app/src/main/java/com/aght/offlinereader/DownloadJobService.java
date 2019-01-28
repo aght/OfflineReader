@@ -21,8 +21,6 @@ public class DownloadJobService extends JobService {
     private AdBlockWebView adBlockWebView;
     private String webPageUrl;
     private JobParameters parameters;
-    private Handler handler;
-    private Runnable worker;
     private WebPage page;
     private WebPageDatabase database;
 
@@ -70,8 +68,20 @@ public class DownloadJobService extends JobService {
 
                 adBlockWebView.saveWebArchive(path);
 
-                cleanup();
-                jobFinished(parameters, false);
+//                new Runnable() {
+//                    public void run() {
+//                        try {
+//                            Log.d(TAG, "Delaying for 2s");
+//                            Thread.sleep(2000);
+//                        } catch (InterruptedException e) {
+//
+//                        }
+//                        Log.d(TAG, "Cleaning up and shutting down...");
+//                        cleanup();
+//                        jobFinished(parameters, false);
+//                    }
+//                }.run();
+
             }
         };
     }
