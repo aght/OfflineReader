@@ -26,7 +26,7 @@ public class WebViewActivity extends AppCompatActivity {
 
     private static final String TAG = WebViewActivity.class.getSimpleName();
 
-    private AdBlockWebView adBlockWebView;
+    private WebView adBlockWebView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

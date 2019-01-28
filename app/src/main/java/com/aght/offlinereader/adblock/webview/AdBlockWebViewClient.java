@@ -12,7 +12,7 @@ public class AdBlockWebViewClient extends WebViewClient {
     private AdBlockProvider adBlockProvider;
 
     public AdBlockWebViewClient() {
-        this.adBlockProvider = AdBlockProvider.newInstance();
+        this.adBlockProvider = AdBlockProvider.defaultProvider();
     }
 
     @Override

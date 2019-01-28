@@ -10,7 +10,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class AdBlockProvider {
+public class AdBlockProvider implements AutoCloseable {
 
     private static final String TAG = "AdBlockProvider";
 
@@ -45,7 +45,7 @@ public class AdBlockProvider {
 //        filterData = null;
     }
 
-    public static AdBlockProvider newInstance() {
+    public static AdBlockProvider defaultProvider() {
         return new AdBlockProvider(getFileBytes(AD_BLOCK_DATA_FILE));
     }
 
@@ -59,5 +59,9 @@ public class AdBlockProvider {
         }
 
         return null;
+    }
+
+    public void close() {
+        destroy();
     }
 }

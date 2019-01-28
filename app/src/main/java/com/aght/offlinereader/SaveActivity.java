@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.aght.offlinereader.downloader.DownloadJobService;
+
 public class SaveActivity extends Activity {
 
     private static final String TAG = SaveActivity.class.getSimpleName();
@@ -52,13 +54,7 @@ public class SaveActivity extends Activity {
 
         JobScheduler jobScheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
 
-        int result = jobScheduler.schedule(jobInfo);
-
-        if (result == JobScheduler.RESULT_SUCCESS) {
-            Log.d(TAG, "Started download service: " + url);
-        } else {
-            Log.d(TAG, "Failed to start download service: " + url);
-        }
+        jobScheduler.schedule(jobInfo);
 
         finish();
     }
