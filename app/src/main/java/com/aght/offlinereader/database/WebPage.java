@@ -21,7 +21,6 @@ public class WebPage {
 
     public WebPage() {
         fileName = UUID.randomUUID().toString() + FILE_EXT;
-
     }
 
     @NonNull

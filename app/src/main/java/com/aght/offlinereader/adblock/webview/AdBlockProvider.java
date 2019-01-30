@@ -16,10 +16,13 @@ public class AdBlockProvider implements AutoCloseable {
 
     private static final String AD_BLOCK_DATA_FILE = "filter.dat";
 
+    /**
+     * Address to C++ object
+     */
     private final long handle;
 
     // MUST be an instance variable, else native code will crash, due to local variable being
-    // destroyed
+    // garbage collected
     private byte[] filterData;
 
     private native long createAdBlockClient();
@@ -42,7 +45,6 @@ public class AdBlockProvider implements AutoCloseable {
 
     public void destroy() {
         destroyAdBlockClient(handle);
-//        filterData = null;
     }
 
     public static AdBlockProvider defaultProvider() {

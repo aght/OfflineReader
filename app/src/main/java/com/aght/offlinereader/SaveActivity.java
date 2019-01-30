@@ -7,7 +7,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.os.PersistableBundle;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.aght.offlinereader.downloader.DownloadJobService;

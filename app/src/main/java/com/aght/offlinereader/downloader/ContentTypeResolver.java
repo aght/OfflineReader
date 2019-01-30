@@ -1,6 +1,6 @@
 package com.aght.offlinereader.downloader;
 
-import android.content.ContentResolver;
+import android.util.Log;
 
 import com.aght.offlinereader.App;
 
@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ContentTypeResolver {
 
@@ -54,7 +55,7 @@ public class ContentTypeResolver {
 
         if (contentDisposition != null) {
             int index = contentDisposition.lastIndexOf(".");
-            return contentDisposition.substring(index, contentDisposition.length());
+            return sanitize(contentDisposition.substring(index, contentDisposition.length()));
         }
 
         if (contentType == null) {
@@ -69,6 +70,10 @@ public class ContentTypeResolver {
 
         String fileExtension = contentTypeMap.get(contentType.toLowerCase().trim());
 
-        return fileExtension == null ? ".txt" : fileExtension;
+        return fileExtension == null ? ".txt" : sanitize(fileExtension);
+    }
+
+    private String sanitize(String string) {
+        return "." + string.replaceAll("[^a-zA-Z0-9]", "");
     }
 }

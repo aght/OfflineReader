@@ -3,11 +3,6 @@ package com.aght.offlinereader.downloader;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Handler;
-import android.util.Log;
-import android.webkit.WebView;
-
-import com.aght.offlinereader.database.WebPage;
-import com.aght.offlinereader.database.WebPageDatabase;
 
 public class DownloadJobService extends JobService {
 
