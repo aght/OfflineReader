@@ -12,6 +12,9 @@ import android.webkit.WebViewClient;
 
 import com.aght.offlinereader.App;
 import com.aght.offlinereader.adblock.webview.AdBlockProvider;
+import com.aght.offlinereader.adblock.webview.AdBlockWebView;
+import com.aght.offlinereader.adblock.webview.AdBlockWebViewClient;
+import com.aght.offlinereader.database.WebPage;
 import com.aght.offlinereader.database.WebPageDatabase;
 
 import org.apache.commons.io.IOUtils;
@@ -20,6 +23,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,20 +46,19 @@ public class Downloader {
     private String folderName;
     private String pageUrl;
     private String pageTitle;
-    private WebView headlessWebView;
+    private AdBlockWebView headlessWebView;
     private Document document;
     private Map<String, String> resourceMap;
     private boolean hasLoadedJavaScript = false;
 
-    public Downloader() {
+    public Downloader(String url) {
         setupHeadlessWebView();
-    }
-
-    public void download(String url) {
         this.pageUrl = url;
         this.resourceMap = new HashMap<>();
         this.folderName = UUID.randomUUID().toString();
+    }
 
+    public void execute() {
         headlessWebView.loadUrl(pageUrl);
     }
 
@@ -71,18 +74,42 @@ public class Downloader {
         Elements cssElements = document.select("link");
         Elements srcElements = document.select("[src]");
 
-        downloadHTML(html);
         downloadResources(cssElements, "href");
         downloadResources(srcElements, "src");
 
+        Log.d(TAG, "Remapping resources");
+        remapResources(cssElements, "href");
+        remapResources(srcElements, "src");
+
+        Log.d(TAG, "Downloading HTML");
+        downloadHTML(document.html());
+
         onDownloadFinish();
+    }
+
+    private void remapResources(Elements elements, String selection) {
+        for (Element e : elements) {
+            String url = e.absUrl(selection);
+
+            String newUrl = resourceMap.get(url);
+            if (newUrl != null) {
+                Log.d(TAG, newUrl);
+                e.attr(selection, newUrl);
+            }
+        }
     }
 
     private void downloadHTML(String html) {
         String path = getSaveDirectory();
         String fileName = folderName + ".html";
 
-//        writeFile(path, fileName, new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8)));
+        writeFile(path, fileName, new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8)));
+
+        WebPage page = new WebPage();
+        page.setWebPageUrl(pageUrl);
+        page.setWebPageTitle(pageTitle);
+        page.setFileName(path + File.separator + fileName);
+        database.access().insertWebPage(page);
     }
 
     private void downloadResources(Elements elements, String selection) {
@@ -94,6 +121,8 @@ public class Downloader {
 
                 if (!adBlockProvider.shouldBlockUrl(pageUrl, url)) {
                     downloadResource(url);
+                } else {
+                    e.remove();
                 }
             }
         } finally {
@@ -123,7 +152,9 @@ public class Downloader {
                 String path = saveDir + File.separator + fileName;
                 Log.d(TAG, "Saving as: " + path + ": " + url);
 
-                InputStream inputStream = connection.getInputStream();
+                writeFile(saveDir, fileName, connection.getInputStream());
+
+                resourceMap.put(url, "file://" + path);
             }
         } catch (MalformedURLException e) {
             Log.d(TAG, "Malformed Url: " + url);
@@ -146,6 +177,7 @@ public class Downloader {
 
     private void writeFile(String path, String filename, InputStream dataStream) {
         File directory = new File(path);
+
         if (!directory.exists()) {
             directory.mkdirs();
         }
@@ -169,7 +201,7 @@ public class Downloader {
     }
 
     private void setupHeadlessWebView() {
-        headlessWebView = new WebView(App.getContext());
+        headlessWebView = new AdBlockWebView(App.getContext());
         headlessWebView.setWebViewClient(createWebViewClient());
         headlessWebView.setWebChromeClient(createWebChromeClient());
         headlessWebView.getSettings().setJavaScriptEnabled(true);
@@ -177,7 +209,7 @@ public class Downloader {
     }
 
     private WebViewClient createWebViewClient() {
-        return new WebViewClient() {
+        return new AdBlockWebViewClient() {
 
             boolean loadingFinished = true;
             boolean redirect = false;

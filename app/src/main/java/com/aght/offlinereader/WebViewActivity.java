@@ -43,11 +43,14 @@ public class WebViewActivity extends AppCompatActivity {
         adBlockWebView.setWebChromeClient(getWebChromeClient());
 
         adBlockWebView.getSettings().setJavaScriptEnabled(true);
+        adBlockWebView.getSettings().setAllowFileAccessFromFileURLs(true);
+        adBlockWebView.getSettings().setAllowUniversalAccessFromFileURLs(true);
+        adBlockWebView.getSettings().setBlockNetworkLoads(true);
+        adBlockWebView.getSettings().setDomStorageEnabled(true);
+        adBlockWebView.getSettings().setAllowFileAccess(true);
 
-        String path = getFilesDir().getAbsolutePath() + File.separator + page.getFileName();
-        Log.d(TAG, "Loading: " + path);
-
-        adBlockWebView.loadUrl("file://" + path);  //Loads blanks
+        Log.d(TAG, "Loading: " + page.getFileName());
+        adBlockWebView.loadUrl("file://" + page.getFileName());
     }
 
     private WebViewClient getWebViewClient() {

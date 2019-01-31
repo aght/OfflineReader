@@ -18,7 +18,7 @@ public class DownloadJobService extends JobService {
 
         downloadTask = new Runnable() {
             public void run() {
-                downloader = new Downloader() {
+                downloader = new Downloader(parameters.getExtras().getString("url")) {
                     @Override
                     public void onDownloadFinish() {
                         super.onDownloadFinish();
@@ -27,7 +27,7 @@ public class DownloadJobService extends JobService {
                     }
                 };
 
-                downloader.download(parameters.getExtras().getString("url"));
+                downloader.execute();
             }
         };
 
